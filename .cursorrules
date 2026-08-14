@@ -1,0 +1,18 @@
+# Cursor Rules — Frontend Buku Tamu Puskesmas
+
+Baca `AGENTS.md` di folder ini dan di root repository terlebih dahulu.
+
+## Ringkasan
+- SPA Svelte 5 + Vite + TypeScript + Tailwind v4, deploy Cloudflare Pages.
+- Konsumsi REST API backend di `/api/v1` via `fetch` + `credentials: "include"`.
+- Routing hash: `#/` (check-in publik), `#/login`, `#/dashboard`.
+- Bahasa antarmuka & komentar: Bahasa Indonesia.
+
+## Aturan
+- Wajib lolos `bun run check` (svelte-check) setelah mengubah kode.
+- Gunakan Svelte 5 runes: `$state`, `$props`, `$derived`, `$effect`. Satu `.svelte` per komponen.
+- Semua request lewat `src/lib/api.ts` — jangan `fetch` langsung di komponen; jangan simpan token di JS/localStorage.
+- Tipe respons mengikuti `src/lib/types.ts` (selaras `docs/API.md`).
+- `PURPOSES` di `src/lib/constants.ts` harus identik dengan backend `src/lib/constants.ts`.
+- Styling Tailwind; warna brand pakai `primary-*`; jangan buat komponen baru tanpa perlu.
+- Tidak ada komentar yang menjelaskan ulang kode.
