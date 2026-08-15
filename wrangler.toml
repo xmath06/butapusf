@@ -1,0 +1,14 @@
+name = "butapus"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Sajikan SPA statis dari hasil `vite build` (folder dist).
+# not_found_handling = "single-page-application" -> semua route tidak dikenal
+# dikembalikan ke index.html (router SPA berbasis hash #/... tetap aman).
+[assets]
+directory = "dist"
+not_found_handling = "single-page-application"
+
+# URL backend SnapDeploy (tanpa trailing slash & tanpa /api/v1).
+[vars]
+BACKEND_URL = "https://butapus-1a3be.containers.snapdeploy.app"

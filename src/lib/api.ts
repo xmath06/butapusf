@@ -12,7 +12,9 @@ import type {
   User,
 } from "./types";
 
-const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1").replace(/\/+$/, "");
+// Default produksi: relatif "/api/v1" (same-origin proxy Cloudflare Worker).
+// Override via .env VITE_API_URL (dev: http://localhost:3000/api/v1).
+const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   readonly status: number;
