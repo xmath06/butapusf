@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --bun vite",
-    "build": "bun --bun vite build",
+    "build": "vite build",
     "preview": "bun --bun vite preview",
     "check": "bun --bun svelte-check --tsconfig ./tsconfig.json"
   },
