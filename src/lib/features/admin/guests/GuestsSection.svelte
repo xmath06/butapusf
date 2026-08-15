@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getGuests, checkoutGuest, deleteGuest, exportGuestsExcel } from "../../../api";
-  import { PURPOSES } from "../../../constants";
   import type { Guest } from "../../../types";
   import { formatTime, formatDate } from "../../../format";
   import Spinner from "../../../components/Spinner.svelte";
@@ -123,19 +122,16 @@
           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
         />
       </div>
-      <div>
+      <div class="min-w-40">
         <label for="purpose-filter" class="mb-1 block text-xs font-medium text-slate-600">Tujuan</label>
-        <select
+        <input
           id="purpose-filter"
           bind:value={purposeFilter}
           onchange={() => { page = 1; loadGuests(); }}
-          class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="">Semua tujuan</option>
-          {#each PURPOSES as p}
-            <option value={p}>{p}</option>
-          {/each}
-        </select>
+          type="text"
+          placeholder="Filter tujuan"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+        />
       </div>
       <div>
         <label for="date-filter" class="mb-1 block text-xs font-medium text-slate-600">Tanggal</label>
@@ -185,10 +181,10 @@
           <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
             <th class="px-3 py-2">Nama</th>
             <th class="px-3 py-2">NIK / HP</th>
+            <th class="px-3 py-2">Email</th>
             <th class="px-3 py-2">Alamat / Institusi</th>
             <th class="px-3 py-2">Tujuan</th>
-            <th class="px-3 py-2">Keterangan</th>
-            <th class="px-3 py-2">Pax</th>
+            <th class="px-3 py-2">Pesan</th>
             <th class="px-3 py-2">Masuk</th>
             <th class="px-3 py-2">Keluar</th>
             <th class="px-3 py-2">Status</th>
@@ -200,6 +196,7 @@
             <tr class="align-top transition hover:bg-slate-50">
               <td class="px-3 py-3 font-medium text-slate-800">{guest.full_name}</td>
               <td class="px-3 py-3 text-slate-500">{guest.nik_or_phone ?? "-"}</td>
+              <td class="px-3 py-3 text-slate-500">{guest.email ?? "-"}</td>
               <td class="px-3 py-3 text-slate-500">{guest.address_or_institution}</td>
               <td class="px-3 py-3">
                 <span class="inline-block rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
@@ -207,9 +204,8 @@
                 </span>
               </td>
               <td class="max-w-48 px-3 py-3 text-slate-500">
-                {guest.keterangan ?? "-"}
+                {guest.pesan ?? "-"}
               </td>
-              <td class="px-3 py-3 text-slate-600">{guest.pax}</td>
               <td class="px-3 py-3 whitespace-nowrap text-slate-600">
                 {formatDate(guest.checked_in_at)}<br /><span class="text-xs text-slate-400">{formatTime(guest.checked_in_at)}</span>
               </td>

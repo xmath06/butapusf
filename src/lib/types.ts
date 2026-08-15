@@ -19,10 +19,10 @@ export interface Guest {
   id: string;
   full_name: string;
   nik_or_phone: string | null;
+  email: string | null;
   address_or_institution: string;
   purpose: string;
-  keterangan: string | null;
-  pax: number;
+  pesan: string | null;
   checked_in_at: string;
   checked_out_at: string | null;
   created_at: string;
@@ -60,18 +60,18 @@ export interface CreateUserPayload {
 export interface CheckInPayload {
   full_name: string;
   nik_or_phone?: string;
+  email?: string;
   address_or_institution: string;
   purpose: string;
-  keterangan?: string;
-  pax?: number;
+  pesan?: string;
   checked_in_at?: string;
 }
 
 export interface CheckInResult {
   id: string;
   full_name: string;
+  email: string | null;
   purpose: string;
-  pax: number;
   checked_in_at: string;
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { PURPOSES } from "../../constants";
   import { checkIn } from "../../api";
   import type { CheckInResult } from "../../types";
   import Spinner from "../../components/Spinner.svelte";
@@ -7,10 +6,10 @@
 
   let fullName = $state("");
   let nikOrPhone = $state("");
+  let email = $state("");
   let address = $state("");
-  let purpose = $state<string>(PURPOSES[0]);
-  let keterangan = $state("");
-  let pax = $state(1);
+  let purpose = $state("");
+  let pesan = $state("");
   let checkInTime = $state(toLocalInputValue(new Date()));
   let loading = $state(false);
   let errorMessage = $state("");
@@ -30,6 +29,9 @@
     if (address.trim().length < 3) return "Alamat / institusi wajib diisi";
     if (nikOrPhone.trim() !== "" && nikOrPhone.trim().length < 6)
       return "NIK / No. HP minimal 6 karakter";
+    if (purpose.trim().length < 2) return "Tujuan wajib diisi";
+    if (email.trim() !== "" && !/^\S+@\S+\.\S+$/.test(email.trim()))
+      return "Format email tidak valid";
     return "";
   }
 
@@ -45,17 +47,18 @@
       submitted = await checkIn({
         full_name: fullName.trim(),
         nik_or_phone: nikOrPhone.trim() || undefined,
+        email: email.trim() || undefined,
         address_or_institution: address.trim(),
-        purpose,
-        keterangan: keterangan.trim() || undefined,
-        pax,
+        purpose: purpose.trim(),
+        pesan: pesan.trim() || undefined,
         checked_in_at: new Date(checkInTime).toISOString(),
       });
       fullName = "";
       nikOrPhone = "";
+      email = "";
       address = "";
-      keterangan = "";
-      pax = 1;
+      purpose = "";
+      pesan = "";
       checkInTime = toLocalInputValue(new Date());
     } catch (e) {
       errorMessage = e instanceof Error ? e.message : "Gagal check-in, silakan coba lagi";
@@ -93,7 +96,9 @@
         </p>
         <dl class="mt-4 space-y-1 rounded-lg bg-slate-50 p-4 text-left text-sm">
           <div class="flex justify-between"><dt class="text-slate-500">Tujuan</dt><dd class="font-medium">{submitted.purpose}</dd></div>
-          <div class="flex justify-between"><dt class="text-slate-500">Jumlah orang</dt><dd class="font-medium">{submitted.pax}</dd></div>
+          {#if submitted.email}
+            <div class="flex justify-between"><dt class="text-slate-500">Email</dt><dd class="font-medium">{submitted.email}</dd></div>
+          {/if}
           <div class="flex justify-between"><dt class="text-slate-500">Waktu</dt><dd class="font-medium">{new Date(submitted.checked_in_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</dd></div>
         </dl>
         <button
@@ -138,6 +143,17 @@
           </div>
 
           <div>
+            <label for="email" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+            <input
+              id="email"
+              bind:value={email}
+              type="email"
+              placeholder="Opsional, contoh: budi@email.com"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            />
+          </div>
+
+          <div>
             <label for="address" class="mb-1 block text-sm font-medium text-slate-700">Alamat / Institusi <span class="text-red-500">*</span></label>
             <input
               id="address"
@@ -149,30 +165,16 @@
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="purpose" class="mb-1 block text-sm font-medium text-slate-700">Tujuan <span class="text-red-500">*</span></label>
-              <select
-                id="purpose"
-                bind:value={purpose}
-                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-              >
-                {#each PURPOSES as p}
-                  <option value={p}>{p}</option>
-                {/each}
-              </select>
-            </div>
-            <div>
-              <label for="pax" class="mb-1 block text-sm font-medium text-slate-700">Jumlah Orang</label>
-              <input
-                id="pax"
-                bind:value={pax}
-                type="number"
-                min="1"
-                max="20"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-              />
-            </div>
+          <div>
+            <label for="purpose" class="mb-1 block text-sm font-medium text-slate-700">Tujuan <span class="text-red-500">*</span></label>
+            <input
+              id="purpose"
+              bind:value={purpose}
+              type="text"
+              placeholder="Tulis tujuan kunjungan, contoh: Rapat koordinasi"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              required
+            />
           </div>
 
           <div>
@@ -186,13 +188,13 @@
           </div>
 
           <div>
-            <label for="keterangan" class="mb-1 block text-sm font-medium text-slate-700">Keterangan</label>
+            <label for="pesan" class="mb-1 block text-sm font-medium text-slate-700">Pesan</label>
             <textarea
-              id="keterangan"
-              bind:value={keterangan}
+              id="pesan"
+              bind:value={pesan}
               rows="2"
               maxlength="200"
-              placeholder="Opsional, contoh: Penyerahan dokumen tender"
+              placeholder="Opsional, contoh: menemui pak RT untuk koordinasi jadwal"
               class="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
             ></textarea>
           </div>

@@ -42,7 +42,7 @@ frontend/
         ├── types.ts        # Tipe mengikuti docs/API.md
         ├── session.ts      # Svelte store sesi admin
         ├── router.svelte.ts # Router hash SPA
-        ├── constants.ts    # PURPOSES (harus selaras dengan backend)
+        ├── constants.ts    # Konstanta global frontend
         ├── format.ts       # format tanggal/waktu
         ├── components/     # Komponen UI bersama (Spinner, Alert)
         └── features/

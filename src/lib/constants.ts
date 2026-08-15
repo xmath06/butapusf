@@ -1,13 +1,5 @@
 /**
- * Daftar tujuan keperluan tamu yang valid.
- * HARUS selaras dengan `PURPOSES` di backend/src/lib/constants.ts.
+ * Konstanta global frontend.
+ * (Tujuan check-in kini teks bebas, tidak lagi dari daftar tetap.)
  */
-export const PURPOSES = [
-  "Kunjungan",
-  "Kedinasan",
-  "Inspeksi",
-  "Tamu Vendor",
-  "Lainnya",
-] as const;
-
-export type Purpose = (typeof PURPOSES)[number];
+export const APP_NAME = "Buku Tamu Puskesmas";
