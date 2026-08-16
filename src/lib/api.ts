@@ -90,7 +90,7 @@ export async function healthCheck(): Promise<boolean> {
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
     const backendUrl = await getBackendUrl();
-    const target = backendUrl ? `${backendUrl}/health` : `${BASE_URL}/health`;
+    const target = backendUrl ? `${backendUrl}/api/v1/health` : `${BASE_URL}/health`;
     const res = await fetch(target, {
       method: "GET",
       credentials: "omit",
