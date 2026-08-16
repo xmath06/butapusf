@@ -104,6 +104,31 @@ export type HealthStatus = "up" | "warming" | "down";
  */
 const HEALTH_TIMEOUT_MS = 60_000;
 
+/**
+ * Bangunkan container SnapDeploy dengan POST ke endpoint publik wake.
+ * URL wake dibentuk dari nama container pada BACKEND_URL
+ * (mis. https://butapus-1a3be.containers.snapdeploy.app →
+ *  https://snapdeploy.dev/api/public/wake/butapus-1a3be).
+ * Dipanggil sekali di awal sebelum poll HEAD kesiapan.
+ */
+export async function wakeServer(): Promise<void> {
+  const backendUrl = await getBackendUrl();
+  if (!backendUrl) return; // mode dev tanpa SnapDeploy: lewati.
+  const container = backendUrl.replace(/^https?:\/\//, "").split(".")[0];
+  const wakeUrl = `https://snapdeploy.dev/api/public/wake/${container}`;
+  try {
+    await fetch(wakeUrl, {
+      method: "POST",
+      headers: { accept: "*/*", "content-type": "application/json" },
+      body: null,
+      mode: "cors",
+      credentials: "omit",
+    });
+  } catch {
+    // Abaikan: bila wake gagal, poll HEAD di bawah akan mencoba lagi.
+  }
+}
+
 export async function healthCheck(): Promise<HealthStatus> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), HEALTH_TIMEOUT_MS);

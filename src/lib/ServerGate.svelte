@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { healthCheck } from "./api";
+  import { healthCheck, wakeServer } from "./api";
   import ServerLoading from "./components/ServerLoading.svelte";
 
   let { children }: { children: import("svelte").Snippet } = $props();
@@ -17,6 +17,9 @@
   async function checkServer() {
     checking = true;
     try {
+      // 1) Bangunkan container SnapDeploy via POST ke endpoint wake.
+      await wakeServer();
+      // 2) Poll HEAD ke /api/v1/health sampai dapat 200.
       const status = await healthCheck();
       if (status === "up") {
         ready = true;
