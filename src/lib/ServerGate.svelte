@@ -4,22 +4,15 @@
 
   let { children }: { children: import("svelte").Snippet } = $props();
 
-  // Interval mengecil untuk kasus server BENAR-BENAR tak terjangkau (down):
-  // 30s → 15s → 8s → 4s → 2s → 1s.
-  const INTERVALS = [30, 15, 8, 4, 2, 1];
-  // Bila server merespons tapi belum siap (warming / 503), cek ulang cepat
-  // agar container tidak keburu tidur lagi sebelum cold start selesai.
-  const WARMING_INTERVAL = 3;
+  // Polling tetap tiap detik (seperti browser yang menghit berkali-kali sampai
+  // dapat 200). Jeda panjang justru membuat container SnapDeploy keburu tidur
+  // lagi di antara pengecekan, sehingga cold start tidak pernah selesai.
+  const POLL_INTERVAL = 1;
 
   let ready = $state(false);
   let checking = $state(false);
   let warming = $state(false);
   let nextCheckIn = $state<number | null>(null);
-  let attempt = $state(0);
-
-  function intervalFor(i: number): number {
-    return i < INTERVALS.length ? INTERVALS[i] : 1;
-  }
 
   async function checkServer() {
     checking = true;
@@ -29,22 +22,12 @@
         ready = true;
         return;
       }
-      if (status === "warming") {
-        // Server merespons (mis. 503) → sedang bangun. Hit cepat.
-        warming = true;
-        nextCheckIn = WARMING_INTERVAL;
-        setTimeout(checkServer, WARMING_INTERVAL * 1000);
-        return;
-      }
+      warming = status === "warming";
     } finally {
       checking = false;
     }
-    // down: server tak terjangkau → interval mengecil.
-    warming = false;
-    const wait = intervalFor(attempt);
-    attempt += 1;
-    nextCheckIn = wait;
-    setTimeout(checkServer, wait * 1000);
+    nextCheckIn = POLL_INTERVAL;
+    setTimeout(checkServer, POLL_INTERVAL * 1000);
   }
 
   checkServer();
