@@ -2,7 +2,8 @@
   let {
     nextCheckIn,
     checking,
-  }: { nextCheckIn: number | null; checking: boolean } = $props();
+    warming,
+  }: { nextCheckIn: number | null; checking: boolean; warming: boolean } = $props();
 </script>
 
 <div
@@ -18,9 +19,13 @@
   </div>
 
   <div class="space-y-1">
-    <h1 class="text-lg font-semibold text-slate-700">Menyiapkan server…</h1>
+    <h1 class="text-lg font-semibold text-slate-700">
+      {warming ? "Server sedang bangun…" : "Menyiapkan server…"}
+    </h1>
     <p class="text-sm text-slate-500">
-      Server sedang diaktifkan. Mohon tunggu sebentar.
+      {warming
+        ? "Backend terdeteksi merespons, menunggu cold start selesai."
+        : "Server sedang diaktifkan. Mohon tunggu sebentar."}
     </p>
   </div>
 

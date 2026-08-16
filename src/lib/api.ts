@@ -80,19 +80,27 @@ async function getBackendUrl(): Promise<string> {
 }
 
 /**
+ * Status kesehatan backend saat pengecekan cold start.
+ * - "up":      respons 2xx → server siap, lanjut ke halaman.
+ * - "warming": respons diterima tapi bukan 2xx (mis. 503 "waking up") →
+ *             server sedang bangun; harus di-cek ulang cepat agar tidak
+ *             keburu tidur lagi sebelum benar-benar siap.
+ * - "down":    request gagal total (network/CORS/timeout) → server tak
+ *             terjangkau; pakai interval pengecekan yang mengecil.
+ */
+export type HealthStatus = "up" | "warming" | "down";
+
+/**
  * Cek kesehatan backend (GET /api/v1/health) langsung ke URL SnapDeploy dari
  * wrangler.toml, bukan lewat proxy /api worker. Dipakai saat load awal untuk
  * menunggu backend "bangun" (cold start SnapDeploy).
  *
- * Penting: request INI adalah pemicu bangunkan container. Bila koneksi
- * diputus terlalu cepat (timeout pendek), SnapDeploy membatalkan proses
- * wake-up dan server kembali tidur. Maka timeout dibuat panjang (60s) agar
- * cukup menuntaskan cold start — request tetap hidup sampai server merespons.
- * Mengembalikan `false` bila benar-benar gagal, tanpa melempar.
+ * Request INI adalah pemicu bangunkan container. Timeout dibuat panjang (60s)
+ * agar menuntaskan cold start bila butuh waktu lama. Tidak melempar error.
  */
 const HEALTH_TIMEOUT_MS = 60_000;
 
-export async function healthCheck(): Promise<boolean> {
+export async function healthCheck(): Promise<HealthStatus> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), HEALTH_TIMEOUT_MS);
   try {
@@ -103,9 +111,9 @@ export async function healthCheck(): Promise<boolean> {
       credentials: "omit",
       signal: ctrl.signal,
     });
-    return res.ok;
+    return res.ok ? "up" : "warming";
   } catch {
-    return false;
+    return "down";
   } finally {
     clearTimeout(timer);
   }
