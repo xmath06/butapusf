@@ -17,9 +17,7 @@
   async function checkServer() {
     checking = true;
     try {
-      // 1) Bangunkan container SnapDeploy via POST ke endpoint wake.
-      await wakeServer();
-      // 2) Poll HEAD ke /api/v1/health sampai dapat 200.
+      // Poll HEAD ke /api/v1/health sampai dapat 200.
       const status = await healthCheck();
       if (status === "up") {
         ready = true;
@@ -33,6 +31,9 @@
     setTimeout(checkServer, POLL_INTERVAL * 1000);
   }
 
+  // Bangunkan container SnapDeploy cukup SEKALI (POST ke endpoint wake),
+  // lalu mulai poll HEAD kesiapan.
+  wakeServer();
   checkServer();
 </script>
 
