@@ -80,14 +80,21 @@ async function getBackendUrl(): Promise<string> {
 }
 
 /**
- * Cek kesehatan backend (GET /health) langsung ke URL SnapDeploy dari
+ * Cek kesehatan backend (GET /api/v1/health) langsung ke URL SnapDeploy dari
  * wrangler.toml, bukan lewat proxy /api worker. Dipakai saat load awal untuk
- * menunggu backend "bangun" (cold start). Mengembalikan `false` saat server
- * tidak respon / error, tanpa melempar. Request dibatasi 8 detik.
+ * menunggu backend "bangun" (cold start SnapDeploy).
+ *
+ * Penting: request INI adalah pemicu bangunkan container. Bila koneksi
+ * diputus terlalu cepat (timeout pendek), SnapDeploy membatalkan proses
+ * wake-up dan server kembali tidur. Maka timeout dibuat panjang (60s) agar
+ * cukup menuntaskan cold start — request tetap hidup sampai server merespons.
+ * Mengembalikan `false` bila benar-benar gagal, tanpa melempar.
  */
+const HEALTH_TIMEOUT_MS = 60_000;
+
 export async function healthCheck(): Promise<boolean> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), HEALTH_TIMEOUT_MS);
   try {
     const backendUrl = await getBackendUrl();
     const target = backendUrl ? `${backendUrl}/api/v1/health` : `${BASE_URL}/health`;
