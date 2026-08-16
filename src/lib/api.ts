@@ -91,17 +91,15 @@ async function getBackendUrl(): Promise<string> {
 export type HealthStatus = "up" | "warming" | "down";
 
 /**
- * Cek kesehatan backend (GET /api/v1/health) langsung ke URL SnapDeploy dari
- * wrangler.toml, bukan lewat proxy /api worker. Dipakai saat load awal untuk
- * menunggu backend "bangun" (cold start SnapDeploy).
+ * Cek kesehatan backend langsung ke URL SnapDeploy dari wrangler.toml, bukan
+ * lewat proxy /api worker. Dipakai saat load awal untuk menunggu backend
+ * "bangun" (cold start SnapDeploy).
  *
- * Penting: fetch cross-origin biasa (mode cors) memicu preflight dan terblokir
- * sebelum GET sungguhan sampai ke container — sehingga tidak membangunkan
- * server (request yang sampai ke edge cuma probe, bukan GET ke container).
- * Membuka URL di address bar browser berhasil karena itu GET murni tanpa
- * preflight yang langsung menyentuh container. Maka:
- *   1) no-cors GET murni → mencapai container & memicu cold start (wake).
- *   2) cors GET → membaca status siap (200) atau masih warming (503).
+ * SnapDeploy membangunkan container lewat request HEAD (sama seperti saat URL
+ * dibuka di browser, yang mengirim HEAD). Maka:
+ *   1) no-cors HEAD murni → mencapai container & memicu cold start (wake),
+ *      tanpa preflight CORS yang bisa memblokir.
+ *   2) cors HEAD → membaca status siap (200) atau masih warming (503).
  * Timeout 60s agar menuntaskan cold start. Tidak melempar error.
  */
 const HEALTH_TIMEOUT_MS = 60_000;
@@ -113,11 +111,11 @@ export async function healthCheck(): Promise<HealthStatus> {
     const backendUrl = await getBackendUrl();
     const target = backendUrl ? `${backendUrl}/api/v1/health` : `${BASE_URL}/health`;
 
-    // 1) no-cors ping: GET murni tanpa preflight, langsung ke container
-    //    (sama seperti navigasi browser) → memicu bangunkan server.
+    // 1) no-cors HEAD: request murni tanpa preflight, langsung ke container
+    //    (persis seperti navigasi browser) → memicu bangunkan server.
     try {
       await fetch(target, {
-        method: "GET",
+        method: "HEAD",
         mode: "no-cors",
         signal: ctrl.signal,
       });
@@ -125,10 +123,10 @@ export async function healthCheck(): Promise<HealthStatus> {
       return "down";
     }
 
-    // 2) cors GET untuk membaca status: 200 → siap, selain itu → warming.
+    // 2) cors HEAD untuk membaca status: 200 → siap, selain itu → warming.
     try {
       const res = await fetch(target, {
-        method: "GET",
+        method: "HEAD",
         credentials: "omit",
         signal: ctrl.signal,
       });
