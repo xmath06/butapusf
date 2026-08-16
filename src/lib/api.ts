@@ -61,6 +61,29 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   return (body as SuccessResponse<T>).data;
 }
 
+/**
+ * Cek kesehatan backend (GET /health).
+ * Dipakai saat load awal untuk menunggu backend "bangun" (SnapDeploy cold start).
+ * Mengembalikan `false` saat server tidak respon / error, tanpa melempar.
+ * Request dibatasi 8 detik agar pengecekan berulang tidak menggantung.
+ */
+export async function healthCheck(): Promise<boolean> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(`${BASE_URL}/health`, {
+      method: "GET",
+      credentials: "include",
+      signal: ctrl.signal,
+    });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ---------- Guest (publik) ----------
 
 export function checkIn(payload: CheckInPayload): Promise<CheckInResult> {
