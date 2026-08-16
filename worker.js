@@ -37,6 +37,15 @@ export default {
       });
     }
 
+    // Endpoint konfigurasi: ekspos BACKEND_URL ke SPA (browser) agar health
+    // check bisa menembak backend langsung, bukan lewat proxy /api.
+    if (url.pathname === "/__config") {
+      const backendUrl = (env.BACKEND_URL ?? "").replace(/\/+$/, "");
+      return new Response(JSON.stringify({ backendUrl }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // Selain /api, serahkan ke Cloudflare Assets (SPA).
     return env.ASSETS.fetch(request);
   },

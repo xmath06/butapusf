@@ -61,19 +61,39 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   return (body as SuccessResponse<T>).data;
 }
 
+// URL backend asli (SnapDeploy) digunakan untuk health check langsung,
+// diambil sekali dari endpoint /__config (diekspos worker dari BACKEND_URL
+// di wrangler.toml). Fallback ke BASE_URL relatif bila /__config tidak ada
+// (mis. mode dev lokal tanpa worker).
+let cachedBackendUrl: string | null = null;
+
+async function getBackendUrl(): Promise<string> {
+  if (cachedBackendUrl !== null) return cachedBackendUrl;
+  try {
+    const res = await fetch("/__config", { credentials: "omit" });
+    const data = (await res.json().catch(() => ({}))) as { backendUrl?: string };
+    cachedBackendUrl = (data.backendUrl ?? "").replace(/\/+$/, "");
+  } catch {
+    cachedBackendUrl = "";
+  }
+  return cachedBackendUrl;
+}
+
 /**
- * Cek kesehatan backend (GET /health).
- * Dipakai saat load awal untuk menunggu backend "bangun" (SnapDeploy cold start).
- * Mengembalikan `false` saat server tidak respon / error, tanpa melempar.
- * Request dibatasi 8 detik agar pengecekan berulang tidak menggantung.
+ * Cek kesehatan backend (GET /health) langsung ke URL SnapDeploy dari
+ * wrangler.toml, bukan lewat proxy /api worker. Dipakai saat load awal untuk
+ * menunggu backend "bangun" (cold start). Mengembalikan `false` saat server
+ * tidak respon / error, tanpa melempar. Request dibatasi 8 detik.
  */
 export async function healthCheck(): Promise<boolean> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch(`${BASE_URL}/health`, {
+    const backendUrl = await getBackendUrl();
+    const target = backendUrl ? `${backendUrl}/health` : `${BASE_URL}/health`;
+    const res = await fetch(target, {
       method: "GET",
-      credentials: "include",
+      credentials: "omit",
       signal: ctrl.signal,
     });
     return res.ok;
